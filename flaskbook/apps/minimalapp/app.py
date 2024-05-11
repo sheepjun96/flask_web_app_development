@@ -1,9 +1,20 @@
 from email_validator import validate_email, EmailNotValidError
 from flask import Flask, render_template, url_for, current_app, g, request, redirect
 from flask import flash
+from flask_mail import Mail, Message
+import logging, os
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "yangjunmo5420"
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
+app.config["MAIL_PORT"] = os.environ.get("MAIL_PORT")
+app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS")
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER")
+
+app.logger.setLevel(logging.DEBUG)
+mail = Mail(app)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -51,9 +62,15 @@ def contact_complete():
         if not is_valid:
             return redirect(url_for("contact"))
 
-        # 이메일 보내기(나중에)
-        
+        send_email(email, "문의 감사합니다.", "contact_mail", username=username, description=description,)
+
         flash("문의해 주셔서 감사합니다.")
         return redirect(url_for("contact_complete"))
 
     return render_template("contact_complete.html")
+
+def send_email(to, subject, template, **kwargs):
+    msg = Message(subject, recipients=[to])
+    msg.body = render_template(template + ".txt", **kwargs)
+    msg.html = render_template(template + ".html", **kwargs)
+    mail.send(msg)
