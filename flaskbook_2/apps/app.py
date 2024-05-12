@@ -1,4 +1,6 @@
 from pathlib import Path
+from apps.config import config
+
 from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -7,9 +9,10 @@ from flask_wtf.csrf import CSRFProtect
 db = SQLAlchemy()
 csrf = CSRFProtect()
 
-def create_app():
+def create_app(config_key):
     app = Flask(__name__)
 
+    app.config.from_object(config[config_key])
     app.config.from_mapping(
         SECRET_KEY="2AZSMss3p5QPbcY2hBsJ",
         WTF_CSRF_SECRET_KEY="AuwzyszU5sugKN7KZs6f",
